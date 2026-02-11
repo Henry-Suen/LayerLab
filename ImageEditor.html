@@ -39,13 +39,14 @@
 
         /* Header */
         header {
-            height: 50px;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 8px;
+            padding: calc(6px + env(safe-area-inset-top)) 8px 6px;
+            min-height: 50px;
             background-color: var(--surface-color);
             border-bottom: 1px solid var(--border-color);
             z-index: 10;
         }
+
         h1 { font-size: 18px; margin: 0; font-weight: 600; flex: 1; text-align: center; }
         .header-btn { background: none; border: none; color: var(--primary-color); font-size: 14px; font-weight: 500; cursor: pointer; padding: 0 10px; }
         .header-icon-btn { font-size: 18px; color: var(--text-color); background: none; border: none; padding: 8px; }
@@ -111,12 +112,15 @@
         .action-btn.active { background-color: var(--primary-color); }
 
         /* Sliders */
-        .slider-container { display: flex; align-items: center; gap: 10px; }
-        .slider-label { font-size: 12px; color: var(--secondary-text); width: 60px; }
+        .slider-container { display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0; }
+        .slider-label { font-size: 12px; color: var(--secondary-text); width: 60px; flex: 0 0 60px; }
         input[type="range"] {
-            flex: 1; height: 4px; border-radius: 2px; background: #3a3a3c;
-            outline: none; -webkit-appearance: none;
+            flex: 1 1 auto; width: 100%; min-width: 0;
+            height: 4px; border-radius: 2px; background: #3a3a3c;
+            outline: none; -webkit-appearance: none; appearance: none;
+
         }
+
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none; width: 20px; height: 20px;
             border-radius: 50%; background: var(--primary-color); cursor: pointer; border: 2px solid #fff;
@@ -131,7 +135,8 @@
         
         /* Toast */
         #toast {
-            position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
+            position: fixed; top: calc(60px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
+
             background-color: rgba(255, 255, 255, 0.9); color: #000;
             padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 500;
             opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
@@ -172,7 +177,9 @@
 
     <div class="tool-row" id="view-row">
         <button class="action-btn" style="flex:1" onclick="resetView()">Reset View</button>
+        <button class="action-btn" style="flex:1" onclick="resetEdits()">Reset</button>
     </div>
+
 
     <!-- MODE: BLEND -->
     <div id="panel-blend" class="panel active">
@@ -210,7 +217,8 @@
         </div>
         <div class="slider-container">
             <span class="slider-label">Strength</span>
-            <input type="range" id="blurStrengthRange" min="1" max="50" value="10">
+            <input type="range" id="blurStrengthRange" min="1" max="100" value="10">
+
             <span class="slider-label" id="blurVal">10px</span>
         </div>
         <div class="slider-container">
@@ -324,9 +332,15 @@
     let maskCanvas = null;
 
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes('Mac') && 'ontouchend' in document);
-    const BLUR_STRENGTH_STEPS = [8, 20, 40, 70];
+    const BLUR_STRENGTH_STEPS = [16, 40, 80, 140];
     const BLUR_STRENGTH_SCALE = 1.4;
+    const BLUR_LAYER_TARGET_MAX = 1800;
+    const BLUR_LAYER_MEDIUM_MAX = 3000;
+    const BLUR_LAYER_SCALE_MEDIUM = 0.75;
+    const BLUR_LAYER_SCALE_LOW = 0.5;
+    let blurLayerScale = 1;
     const VIEW_MIN_SCALE = 0.5;
+
     const VIEW_MAX_SCALE = 6;
     let blurLayers = [];
     let blurLayersReady = false;
@@ -1086,7 +1100,8 @@
         const w = sourceCanvas.width;
         const h = sourceCanvas.height;
         const sigma = Math.max(0.6, strength * 0.6);
-        const radius = Math.min(40, Math.max(2, Math.ceil(sigma * 2.5)));
+        const radius = Math.min(80, Math.max(2, Math.ceil(sigma * 2.5)));
+
 
         const srcCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
         const srcData = srcCtx.getImageData(0, 0, w, h);
@@ -1146,12 +1161,29 @@
         targetCtx.putImageData(outData, 0, 0);
     }
 
+    function getBlurLayerScale() {
+        const maxDim = Math.max(canvas.width, canvas.height);
+        if (maxDim <= BLUR_LAYER_TARGET_MAX) return 1;
+        if (maxDim <= BLUR_LAYER_MEDIUM_MAX) return BLUR_LAYER_SCALE_MEDIUM;
+        return BLUR_LAYER_SCALE_LOW;
+    }
+
     function buildBlurLayers() {
+
         if (!baseCanvas) return;
         blurLayersReady = false;
         blurLayers = [];
         let idx = 0;
         showToast('Building blur layers...');
+
+        blurLayerScale = getBlurLayerScale();
+        const layerWidth = Math.max(1, Math.round(canvas.width * blurLayerScale));
+        const layerHeight = Math.max(1, Math.round(canvas.height * blurLayerScale));
+        const scaledBase = document.createElement('canvas');
+        scaledBase.width = layerWidth;
+        scaledBase.height = layerHeight;
+        const scaledCtx = scaledBase.getContext('2d', { willReadFrequently: true });
+        scaledCtx.drawImage(baseCanvas, 0, 0, layerWidth, layerHeight);
 
         const buildNext = () => {
             if (!baseCanvas) return;
@@ -1163,23 +1195,25 @@
 
             const strength = BLUR_STRENGTH_STEPS[idx];
             const layerCanvas = document.createElement('canvas');
-            layerCanvas.width = canvas.width;
-            layerCanvas.height = canvas.height;
+            layerCanvas.width = layerWidth;
+            layerCanvas.height = layerHeight;
             const lCtx = layerCanvas.getContext('2d');
+            const effectiveStrength = strength * blurLayerScale;
 
             const canUseFilter = !isIOS && typeof lCtx.filter !== 'undefined';
             if (canUseFilter) {
-                lCtx.filter = `blur(${strength}px)`;
-                lCtx.drawImage(baseCanvas, 0, 0);
+                lCtx.filter = `blur(${effectiveStrength}px)`;
+                lCtx.drawImage(scaledBase, 0, 0);
                 lCtx.filter = 'none';
             } else {
-                drawFallbackBlur(baseCanvas, lCtx, strength);
+                drawFallbackBlur(scaledBase, lCtx, effectiveStrength);
             }
 
-            blurLayers.push({ strength, canvas: layerCanvas });
+            blurLayers.push({ strength, canvas: layerCanvas, scale: blurLayerScale });
             idx++;
             setTimeout(buildNext, 0);
         };
+
 
         buildNext();
     }
@@ -1213,7 +1247,8 @@
         tempCanvas.width = canvas.width;
         tempCanvas.height = canvas.height;
         const tCtx = tempCanvas.getContext('2d');
-        tCtx.drawImage(layer.canvas, 0, 0);
+        tCtx.drawImage(layer.canvas, 0, 0, canvas.width, canvas.height);
+
 
         // 2. Create a Soft Mask (Vignette) based on Softness slider
         const maskCanvas2 = document.createElement('canvas');
@@ -1335,7 +1370,44 @@
         showToast('Cleared');
     }
 
+    function resetEdits() {
+        if (!baseCanvas || !state.baseImg) return;
+        if (!confirm("Reset edits and overlays?")) return;
+
+        const bCtx = baseCanvas.getContext('2d', { willReadFrequently: true });
+        baseCanvas.width = state.baseImg.width;
+        baseCanvas.height = state.baseImg.height;
+        bCtx.drawImage(state.baseImg, 0, 0);
+
+        canvas.width = state.baseImg.width;
+        canvas.height = state.baseImg.height;
+
+        overlayCanvas = null;
+        maskCanvas = null;
+        state.overlayImg = null;
+        document.getElementById('overlayInput').value = '';
+
+        state.cloneSource = { x: null, y: null };
+        state.retouchMode = 'pick';
+        document.getElementById('btnPickSource').classList.add('active');
+        document.getElementById('btnPaintSource').classList.remove('active');
+        document.getElementById('retouchStatus').textContent = 'Tap "Pick Source" then tap image';
+
+        maskHistory.length = 0;
+        maskIndex = -1;
+        baseHistory.length = 0;
+        baseIndex = -1;
+        baseHistory.push(baseCanvas.toDataURL());
+        baseIndex = 0;
+
+        emptyState.style.display = 'none';
+        resetView(false);
+        render();
+        showToast('Reset');
+    }
+
     function resetProject() {
+
         if(confirm("Reset everything?")) {
             state.baseImg = null;
             state.overlayImg = null;

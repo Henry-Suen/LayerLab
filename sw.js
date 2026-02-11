@@ -1,7 +1,7 @@
-const CACHE_NAME = 'blend-pro-v1';
+const CACHE_NAME = 'blend-pro-v1.1';
 const CORE_ASSETS = [
   './',
-  './ImageEditor.html',
+  './index.html',
   './manifest.json'
 ];
 
@@ -35,3 +35,4 @@ self.addEventListener('fetch', (event) => {
     )
   );
 });
+

@@ -243,7 +243,7 @@
     <h1 id="pageTitle">LayerLab</h1>
     <button class="header-btn" onclick="saveImage()">Save</button>
 </header>
-<div id="versionBadge">v1.0.1</div>
+<div id="versionBadge">v1.1.0</div>
 
 <main id="canvasViewport">
     <div id="empty-state">
@@ -353,6 +353,7 @@
 <input type="file" id="overlayInput" accept="image/*">
 <div id="toast">Message</div>
 
+<script src="./vendor/stackblur.min.js"></script>
 <script>
     const state = {
         mode: 'blend',
@@ -398,6 +399,7 @@
 
     const VIEW_MIN_SCALE = 0.5;
     const VIEW_MAX_SCALE = 6;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes('Mac') && 'ontouchend' in document);
 
     const emptyState = document.getElementById('empty-state');
     const toastEl = document.getElementById('toast');
@@ -1421,10 +1423,14 @@
         const tCtx = blurBuffers.tempCtx;
 
         tCtx.clearRect(0, 0, blurBuffers.size, blurBuffers.size);
-        if (typeof tCtx.filter === 'string') {
+        const canFilter = typeof tCtx.filter === 'string' && !isIOS;
+        if (canFilter) {
             tCtx.filter = `blur(${blurPx}px)`;
             tCtx.drawImage(baseCanvas, srcX, srcY, size, size, 0, 0, blurBuffers.size, blurBuffers.size);
             tCtx.filter = 'none';
+        } else if (window.StackBlur && typeof StackBlur.canvasRGB === 'function') {
+            tCtx.drawImage(baseCanvas, srcX, srcY, size, size, 0, 0, blurBuffers.size, blurBuffers.size);
+            StackBlur.canvasRGB(blurBuffers.temp, 0, 0, blurBuffers.size, blurBuffers.size, Math.round(blurPx));
         } else {
             const srcData = bCtx.getImageData(srcX, srcY, size, size);
             const radius = Math.max(1, Math.round(blurPx));

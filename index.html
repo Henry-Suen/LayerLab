@@ -43,8 +43,8 @@
             align-items: center;
             justify-content: space-between;
             gap: 8px;
-            padding: calc(6px + env(safe-area-inset-top)) 8px 6px;
-            min-height: 50px;
+            padding: calc(10px + env(safe-area-inset-top)) 8px 8px;
+            min-height: 56px;
             background-color: var(--surface-color);
             border-bottom: 1px solid var(--border-color);
             z-index: 10;
@@ -58,9 +58,34 @@
             min-width: 0;
         }
 
-        h1 { font-size: 18px; margin: 0; font-weight: 600; flex: 1; text-align: center; }
-        .header-icon-btn { font-size: 14px; color: var(--text-color); background: none; border: none; padding: 8px; }
-        .header-action { padding: 6px 10px; border-radius: 8px; font-size: 13px; }
+        h1 { font-size: 16px; margin: 0; font-weight: 600; flex: 1; text-align: center; }
+        .header-icon-btn {
+            font-size: 16px;
+            color: var(--text-color);
+            background: none;
+            border: none;
+            padding: 4px;
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+        }
+        .header-action {
+            border-radius: 8px;
+            font-size: 12px;
+            height: 30px;
+            width: 88px;
+            padding: 0 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            white-space: nowrap;
+        }
+        .header-import { font-size: 11px; }
+
 
 
         /* Main Area */
@@ -278,13 +303,13 @@
     <div class="header-left">
         <button class="header-icon-btn" onclick="undo()">↩️</button>
         <button class="header-icon-btn" onclick="redo()">↪️</button>
-        <button class="header-icon-btn" onclick="resetEdits()">Reset</button>
+        <button class="header-icon-btn" onclick="resetEdits()">🔄</button>
     </div>
-    <h1 id="pageTitle">💥 Blend</h1>
+    <h1 id="pageTitle">Blend</h1>
 
     <div class="header-right">
-        <button class="action-btn header-action" onclick="document.getElementById('baseInput').click()">Import Base</button>
-        <button class="action-btn header-action" id="btnOverlay" onclick="document.getElementById('overlayInput').click()">Import Overlay</button>
+        <button class="action-btn header-action header-import" onclick="document.getElementById('baseInput').click()">Import Base</button>
+        <button class="action-btn header-action header-import" id="btnOverlay" onclick="document.getElementById('overlayInput').click()">Import Overlay</button>
         <button class="action-btn header-action" onclick="saveImage()">Save</button>
     </div>
 </header>
@@ -924,8 +949,7 @@
             btnOverlay.disabled = true;
         }
 
-        const modeEmoji = newMode === 'blend' ? '🔀' : newMode === 'blur' ? '💧' : '🩹';
-        pageTitle.textContent = modeEmoji + ' ' + newMode.charAt(0).toUpperCase() + newMode.slice(1);
+        pageTitle.textContent =  newMode.charAt(0).toUpperCase() + newMode.slice(1);
 
 
 

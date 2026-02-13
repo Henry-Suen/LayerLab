@@ -1,4 +1,4 @@
-const CACHE_NAME = 'blend-pro-v1.2.0';
+const CACHE_NAME = 'blend-pro-v1.2.1';
 const CORE_ASSETS = [
   './',
   './index.html',

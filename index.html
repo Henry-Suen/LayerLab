@@ -214,6 +214,21 @@
         }
         #toast.show { opacity: 1; }
 
+        /* Version Badge */
+        #versionBadge {
+            position: fixed;
+            top: calc(58px + env(safe-area-inset-top));
+            left: 8px;
+            font-size: 11px;
+            color: var(--secondary-text);
+            background: rgba(0, 0, 0, 0.35);
+            padding: 3px 6px;
+            border-radius: 6px;
+            z-index: 110;
+            pointer-events: none;
+            letter-spacing: 0.2px;
+        }
+
         input[type="file"] { display: none; }
         .hidden { display: none !important; }
     </style>
@@ -228,6 +243,7 @@
     <h1 id="pageTitle">LayerLab</h1>
     <button class="header-btn" onclick="saveImage()">Save</button>
 </header>
+<div id="versionBadge">v1.0.1</div>
 
 <main id="canvasViewport">
     <div id="empty-state">

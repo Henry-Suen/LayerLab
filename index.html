@@ -1313,11 +1313,87 @@
         blurBuffers.mask.height = s;
     }
 
+    function boxBlurRGBA(src, width, height, radius) {
+        if (radius <= 0) return new Uint8ClampedArray(src);
+        const tmp = new Float32Array(src.length);
+        const dst = new Uint8ClampedArray(src.length);
+        const windowSize = radius * 2 + 1;
+        const rowStride = width * 4;
+
+        for (let y = 0; y < height; y++) {
+            const row = y * rowStride;
+            let r = 0, g = 0, b = 0, a = 0;
+            for (let ix = 0; ix <= radius; ix++) {
+                const idx = row + ix * 4;
+                r += src[idx];
+                g += src[idx + 1];
+                b += src[idx + 2];
+                a += src[idx + 3];
+            }
+            for (let x = 0; x < width; x++) {
+                if (x > 0) {
+                    const addX = Math.min(width - 1, x + radius);
+                    const subX = Math.max(0, x - radius - 1);
+                    const addIdx = row + addX * 4;
+                    const subIdx = row + subX * 4;
+                    r += src[addIdx] - src[subIdx];
+                    g += src[addIdx + 1] - src[subIdx + 1];
+                    b += src[addIdx + 2] - src[subIdx + 2];
+                    a += src[addIdx + 3] - src[subIdx + 3];
+                }
+                const out = row + x * 4;
+                tmp[out] = r / windowSize;
+                tmp[out + 1] = g / windowSize;
+                tmp[out + 2] = b / windowSize;
+                tmp[out + 3] = a / windowSize;
+            }
+        }
+
+        for (let x = 0; x < width; x++) {
+            let r = 0, g = 0, b = 0, a = 0;
+            for (let iy = 0; iy <= radius; iy++) {
+                const idx = (iy * width + x) * 4;
+                r += tmp[idx];
+                g += tmp[idx + 1];
+                b += tmp[idx + 2];
+                a += tmp[idx + 3];
+            }
+            for (let y = 0; y < height; y++) {
+                if (y > 0) {
+                    const addY = Math.min(height - 1, y + radius);
+                    const subY = Math.max(0, y - radius - 1);
+                    const addIdx = (addY * width + x) * 4;
+                    const subIdx = (subY * width + x) * 4;
+                    r += tmp[addIdx] - tmp[subIdx];
+                    g += tmp[addIdx + 1] - tmp[subIdx + 1];
+                    b += tmp[addIdx + 2] - tmp[subIdx + 2];
+                    a += tmp[addIdx + 3] - tmp[subIdx + 3];
+                }
+                const out = (y * width + x) * 4;
+                dst[out] = r / windowSize;
+                dst[out + 1] = g / windowSize;
+                dst[out + 2] = b / windowSize;
+                dst[out + 3] = a / windowSize;
+            }
+        }
+
+        return dst;
+    }
+
+    function applyBoxBlurGaussianApprox(src, width, height, radius, passes = 3) {
+        let data = new Uint8ClampedArray(src);
+        const passRadius = Math.max(1, Math.round(radius));
+        for (let i = 0; i < passes; i++) {
+            data = boxBlurRGBA(data, width, height, passRadius);
+        }
+        return data;
+    }
+
     function applyBlur(x, y) {
         if (!baseCanvas) return;
 
         const bCtx = baseCanvas.getContext('2d');
-        const size = Math.max(2, (state.blurSize / 100) * canvas.width);
+        const size = Math.max(2, Math.round((state.blurSize / 100) * canvas.width));
         const half = size / 2;
 
         ensureBlur2dBuffers(size);
@@ -1329,9 +1405,16 @@
         const tCtx = blurBuffers.tempCtx;
 
         tCtx.clearRect(0, 0, blurBuffers.size, blurBuffers.size);
-        tCtx.filter = `blur(${blurPx}px)`;
-        tCtx.drawImage(baseCanvas, srcX, srcY, size, size, 0, 0, blurBuffers.size, blurBuffers.size);
-        tCtx.filter = 'none';
+        if (typeof tCtx.filter === 'string') {
+            tCtx.filter = `blur(${blurPx}px)`;
+            tCtx.drawImage(baseCanvas, srcX, srcY, size, size, 0, 0, blurBuffers.size, blurBuffers.size);
+            tCtx.filter = 'none';
+        } else {
+            const srcData = bCtx.getImageData(srcX, srcY, size, size);
+            const radius = Math.max(1, Math.round(blurPx));
+            const blurred = applyBoxBlurGaussianApprox(srcData.data, size, size, radius, 3);
+            tCtx.putImageData(new ImageData(blurred, size, size), 0, 0);
+        }
 
         applyBlurMask(blurBuffers.maskCtx, blurBuffers.size, state.blurSoftness, state.blurShape);
         tCtx.globalCompositeOperation = 'destination-in';

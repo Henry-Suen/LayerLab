@@ -396,6 +396,11 @@
     let baseCanvas = null;
     let overlayCanvas = null;
     let maskCanvas = null;
+    let maskCtx = null;
+    const blendCompositeCanvas = document.createElement('canvas');
+    const blendCompositeCtx = blendCompositeCanvas.getContext('2d');
+    let blendDirty = false;
+
 
     const VIEW_MIN_SCALE = 0.5;
     const VIEW_MAX_SCALE = 6;
@@ -774,10 +779,10 @@
         const dataUrl = maskHistory[index];
         const img = new Image();
         img.onload = () => {
-            if (maskIndex !== index) return;
-            const mCtx = maskCanvas.getContext('2d');
-            mCtx.clearRect(0,0, maskCanvas.width, maskCanvas.height);
-            mCtx.drawImage(img, 0, 0);
+            if (maskIndex !== index || !maskCtx) return;
+            maskCtx.clearRect(0,0, maskCanvas.width, maskCanvas.height);
+            maskCtx.drawImage(img, 0, 0);
+            blendDirty = true;
             render();
         };
         img.src = dataUrl;
@@ -843,7 +848,7 @@
         maskCanvas = document.createElement('canvas');
         maskCanvas.width = canvas.width;
         maskCanvas.height = canvas.height;
-        const mCtx = maskCanvas.getContext('2d', { willReadFrequently: true });
+        maskCtx = maskCanvas.getContext('2d', { willReadFrequently: true });
 
         const bW = canvas.width; const bH = canvas.height;
         const oW = state.overlayImg.width; const oH = state.overlayImg.height;
@@ -860,12 +865,13 @@
         }
         oCtx.drawImage(state.overlayImg, drawX, drawY, drawW, drawH);
 
-        mCtx.fillStyle = '#FFFFFF';
-        mCtx.fillRect(0, 0, canvas.width, canvas.height);
+        maskCtx.fillStyle = '#FFFFFF';
+        maskCtx.fillRect(0, 0, canvas.width, canvas.height);
 
         maskHistory.length = 0;
         maskIndex = -1;
         pushMaskHistory();
+        blendDirty = true;
     }
 
     function switchMode(newMode) {
@@ -897,6 +903,20 @@
         render();
     }
 
+    function updateBlendComposite() {
+        if (!overlayCanvas || !maskCanvas || !maskCtx) return;
+        if (blendCompositeCanvas.width !== canvas.width || blendCompositeCanvas.height !== canvas.height) {
+            blendCompositeCanvas.width = canvas.width;
+            blendCompositeCanvas.height = canvas.height;
+        }
+        blendCompositeCtx.clearRect(0, 0, blendCompositeCanvas.width, blendCompositeCanvas.height);
+        blendCompositeCtx.drawImage(overlayCanvas, 0, 0);
+        blendCompositeCtx.globalCompositeOperation = 'destination-in';
+        blendCompositeCtx.drawImage(maskCanvas, 0, 0);
+        blendCompositeCtx.globalCompositeOperation = 'source-over';
+        blendDirty = false;
+    }
+
     function render(options = {}) {
         if (!baseCanvas) return;
         const showOverlays = options.showOverlays !== false && !state.suppressOverlays;
@@ -905,15 +925,9 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(baseCanvas, 0, 0);
 
-        if (state.mode === 'blend' && overlayCanvas) {
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
-            const tCtx = tempCanvas.getContext('2d');
-            tCtx.drawImage(overlayCanvas, 0, 0);
-            tCtx.globalCompositeOperation = 'destination-in';
-            tCtx.drawImage(maskCanvas, 0, 0);
-            ctx.drawImage(tempCanvas, 0, 0);
+        if (state.mode === 'blend' && overlayCanvas && maskCanvas) {
+            if (blendDirty) updateBlendComposite();
+            ctx.drawImage(blendCompositeCanvas, 0, 0);
         }
 
         if (showOverlays) {
@@ -1058,9 +1072,10 @@
     }
 
     function paintOnMask(x, y) {
-        const mCtx = maskCanvas.getContext('2d', { willReadFrequently: true });
+        if (!maskCtx) return;
         const r = (state.brushSize / 100) * canvas.width / 2;
-        drawBrushLogic(mCtx, x, y, r, state.brushSoftness, state.brushMode);
+        drawBrushLogic(maskCtx, x, y, r, state.brushSoftness, state.brushMode);
+        blendDirty = true;
         render();
     }
 
@@ -1560,24 +1575,24 @@
     }
 
     function invertMask() {
-        if (!maskCanvas) return;
+        if (!maskCanvas || !maskCtx) return;
         pushHistory();
-        const mCtx = maskCanvas.getContext('2d');
-        const imgData = mCtx.getImageData(0, 0, canvas.width, canvas.height);
+        const imgData = maskCtx.getImageData(0, 0, canvas.width, canvas.height);
         for (let i = 0; i < imgData.data.length; i += 4) {
             imgData.data[i+3] = 255 - imgData.data[i+3];
         }
-        mCtx.putImageData(imgData, 0, 0);
+        maskCtx.putImageData(imgData, 0, 0);
+        blendDirty = true;
         render();
         showToast('Inverted');
     }
 
     function clearMask() {
-        if (!maskCanvas) return;
+        if (!maskCanvas || !maskCtx) return;
         pushHistory();
-        const mCtx = maskCanvas.getContext('2d');
-        mCtx.fillStyle = '#FFFFFF';
-        mCtx.fillRect(0, 0, canvas.width, canvas.height);
+        maskCtx.fillStyle = '#FFFFFF';
+        maskCtx.fillRect(0, 0, canvas.width, canvas.height);
+        blendDirty = true;
         render();
         showToast('Cleared');
     }
@@ -1596,6 +1611,11 @@
 
         overlayCanvas = null;
         maskCanvas = null;
+        maskCtx = null;
+        blendDirty = true;
+        if (blendCompositeCanvas.width && blendCompositeCanvas.height) {
+            blendCompositeCtx.clearRect(0, 0, blendCompositeCanvas.width, blendCompositeCanvas.height);
+        }
         state.overlayImg = null;
         document.getElementById('overlayInput').value = '';
 

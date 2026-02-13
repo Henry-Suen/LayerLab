@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>LayerLab</title>
-    
+    <title>LayerLab WebGL</title>
+
     <!-- PWA Settings -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -64,7 +64,6 @@
             max-width: 100%; max-height: 100%;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
             transform-origin: 0 0;
-            /* Pointer events are handled via JS, but prevent default touch actions */
             touch-action: none; 
         }
 
@@ -112,18 +111,91 @@
         .action-btn.active { background-color: var(--primary-color); }
 
         /* Sliders */
-        .slider-container { display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0; }
-        .slider-label { font-size: 12px; color: var(--secondary-text); width: 60px; flex: 0 0 60px; }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 80vw;
+            max-width: 80vw;
+            margin: 0 auto;
+            min-width: 0;
+            min-height: 32px;
+            align-self: center;
+            background: transparent;
+        }
+        .slider-label {
+            font-size: 12px;
+            color: var(--secondary-text);
+            width: 60px;
+            flex: 0 0 60px;
+            line-height: 1;
+            white-space: nowrap;
+        }
         input[type="range"] {
-            flex: 1 1 auto; width: 100%; min-width: 0;
-            height: 4px; border-radius: 2px; background: #3a3a3c;
-            outline: none; -webkit-appearance: none; appearance: none;
+            flex: 1 1 auto;
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            height: 28px;
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            background-color: transparent;
+            border: none;
+            outline: none;
+            box-shadow: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
 
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 4px;
+            background: #3a3a3c;
+            background-color: #3a3a3c;
+            border-radius: 2px;
+            border: none;
+            box-shadow: none;
         }
 
         input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none; width: 20px; height: 20px;
-            border-radius: 50%; background: var(--primary-color); cursor: pointer; border: 2px solid #fff;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            margin-top: -8px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: none;
+        }
+
+        input[type="range"]::-moz-range-track {
+            height: 4px;
+            background: #3a3a3c;
+            border-radius: 2px;
+            border: none;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            border: 2px solid #fff;
+            box-shadow: none;
+        }
+
+        input[type="range"]::-ms-track {
+            height: 4px;
+            background: transparent;
+            border-color: transparent;
+            color: transparent;
+        }
+
+        input[type="range"]::-ms-fill-lower,
+        input[type="range"]::-ms-fill-upper {
+            background: #3a3a3c;
+            border-radius: 2px;
         }
 
         /* Panels */
@@ -136,7 +208,6 @@
         /* Toast */
         #toast {
             position: fixed; top: calc(60px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
-
             background-color: rgba(255, 255, 255, 0.9); color: #000;
             padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 500;
             opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
@@ -158,17 +229,16 @@
     <button class="header-btn" onclick="saveImage()">Save</button>
 </header>
 
-    <main id="canvasViewport">
-        <div id="empty-state">
-            <h2>No Image</h2>
-            <p>Import Base to start</p>
-        </div>
-        <canvas id="mainCanvas"></canvas>
-    </main>
+<main id="canvasViewport">
+    <div id="empty-state">
+        <h2>No Image</h2>
+        <p>Import Base to start</p>
+    </div>
+    <canvas id="mainCanvas"></canvas>
+</main>
 
 <!-- Controls Area -->
 <div id="controls">
-    
     <!-- Common Import -->
     <div class="tool-row" id="import-row">
         <button class="action-btn" style="flex:1" onclick="document.getElementById('baseInput').click()">Import Base</button>
@@ -179,7 +249,6 @@
         <button class="action-btn" style="flex:1" onclick="resetView()">Reset View</button>
         <button class="action-btn" style="flex:1" onclick="resetEdits()">Reset</button>
     </div>
-
 
     <!-- MODE: BLEND -->
     <div id="panel-blend" class="panel active">
@@ -209,7 +278,6 @@
             <button class="tool-btn active" id="btnShapeCircle" onclick="setBrushShape('circle')">Circle</button>
             <button class="tool-btn" id="btnShapeRect" onclick="setBrushShape('rect')">Rectangle</button>
         </div>
-        <!-- Size BEFORE Strength -->
         <div class="slider-container">
             <span class="slider-label">Size</span>
             <input type="range" id="blurSizeRange" min="1" max="100" value="10">
@@ -217,9 +285,8 @@
         </div>
         <div class="slider-container">
             <span class="slider-label">Strength</span>
-            <input type="range" id="blurStrengthRange" min="1" max="100" value="10">
-
-            <span class="slider-label" id="blurVal">10px</span>
+            <input type="range" id="blurStrengthRange" min="1" max="100" value="12">
+            <span class="slider-label" id="blurVal">12px</span>
         </div>
         <div class="slider-container">
             <span class="slider-label">Softness</span>
@@ -248,7 +315,6 @@
             <span class="slider-label" id="retouchSoftVal">20%</span>
         </div>
     </div>
-
 </div>
 
 <!-- Navigation Bar -->
@@ -272,80 +338,51 @@
 <div id="toast">Message</div>
 
 <script>
-    /**
-     * APP ARCHITECTURE
-     */
     const state = {
-        mode: 'blend', 
+        mode: 'blend',
         baseImg: null,
         overlayImg: null,
-        
-        // Blend
-        brushMode: 'paint', 
+        brushMode: 'paint',
         brushSize: 10,
-        brushSoftness: 0.7, 
-        
-        // Blur
-        blurStrength: 10,
+        brushSoftness: 0.7,
+        blurStrength: 12,
         blurSize: 10,
         blurShape: 'circle',
-        blurSoftness: 0.2, // 0 = Hard Edge, 1 = Full Fade
-
-        // Retouch
+        blurSoftness: 0.2,
         retouchMode: 'pick',
         retouchSize: 10,
         retouchSoftness: 0.2,
         cloneSource: {x: null, y: null},
-
         isDrawing: false,
         hasInteracted: false,
         cursor: { x: null, y: null },
         suppressOverlays: false,
-
-        // View Transform
         view: {
             scale: 1,
             offsetX: 0,
             offsetY: 0
         },
-
-        // Center Preview
         showCenterPreview: false,
         centerPreviewTimer: null
     };
 
-    // History Stacks
     const MAX_HISTORY = 20;
-    const maskHistory = []; 
+    const maskHistory = [];
     let maskIndex = -1;
-
-    const baseHistory = []; 
+    const baseHistory = [];
     let baseIndex = -1;
 
-    // Canvases
     const canvas = document.getElementById('mainCanvas');
     const viewport = document.getElementById('canvasViewport');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    
+
     let baseCanvas = null;
     let overlayCanvas = null;
     let maskCanvas = null;
 
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes('Mac') && 'ontouchend' in document);
-    const BLUR_STRENGTH_STEPS = [16, 40, 80, 140];
-    const BLUR_STRENGTH_SCALE = 1.4;
-    const BLUR_LAYER_TARGET_MAX = 1800;
-    const BLUR_LAYER_MEDIUM_MAX = 3000;
-    const BLUR_LAYER_SCALE_MEDIUM = 0.75;
-    const BLUR_LAYER_SCALE_LOW = 0.5;
-    let blurLayerScale = 1;
     const VIEW_MIN_SCALE = 0.5;
-
     const VIEW_MAX_SCALE = 6;
-    let blurLayers = [];
-    let blurLayersReady = false;
 
-    // UI Refs
     const emptyState = document.getElementById('empty-state');
     const toastEl = document.getElementById('toast');
     const pageTitle = document.getElementById('pageTitle');
@@ -357,10 +394,8 @@
     const retouchSizeRange = document.getElementById('retouchSizeRange');
     const retouchSoftRange = document.getElementById('retouchSoftRange');
 
-    // Init
     function init() {
         setupInputs();
-        
         function animate() {
             render();
             requestAnimationFrame(animate);
@@ -369,16 +404,14 @@
     }
 
     function setupInputs() {
-        // Helper to trigger center preview
         const triggerPreview = () => {
             state.showCenterPreview = true;
             clearTimeout(state.centerPreviewTimer);
             state.centerPreviewTimer = setTimeout(() => {
                 state.showCenterPreview = false;
-            }, 2000); // Show for 2 seconds
+            }, 1200);
         };
 
-        // Blend
         sizeRange.addEventListener('input', (e) => {
             state.brushSize = parseInt(e.target.value);
             document.getElementById('sizeVal').textContent = state.brushSize + '%';
@@ -390,7 +423,6 @@
             triggerPreview();
         });
 
-        // Blur
         blurSizeRange.addEventListener('input', (e) => {
             state.blurSize = parseInt(e.target.value);
             document.getElementById('blurSizeVal').textContent = state.blurSize + '%';
@@ -407,7 +439,6 @@
             triggerPreview();
         });
 
-        // Retouch
         retouchSizeRange.addEventListener('input', (e) => {
             state.retouchSize = parseInt(e.target.value);
             document.getElementById('retouchSizeVal').textContent = state.retouchSize + '%';
@@ -419,12 +450,9 @@
             triggerPreview();
         });
 
-        // Files
         document.getElementById('baseInput').addEventListener('change', handleBaseSelect);
         document.getElementById('overlayInput').addEventListener('change', handleOverlaySelect);
 
-        // POINTER EVENTS (Modern Standard)
-        // We replace Mouse/Touch with Pointer for unified handling
         viewport.addEventListener('contextmenu', (e) => e.preventDefault());
 
         viewport.addEventListener('wheel', (e) => {
@@ -461,7 +489,7 @@
                 startStroke(e);
             }
         });
-        
+
         viewport.addEventListener('pointermove', (e) => {
             const entry = activePointers.get(e.pointerId);
             if (entry) {
@@ -484,7 +512,7 @@
                 moveStroke(e);
             }
         });
-        
+
         viewport.addEventListener('pointerup', (e) => {
             activePointers.delete(e.pointerId);
             if (activePointers.size < 2) {
@@ -644,11 +672,6 @@
         return getImagePointFromScreen(pt);
     }
 
-    function setupListeners() { /* Handled inline */ }
-
-    /**
-     * HISTORY SYSTEM
-     */
     function pushHistory() {
         if (state.mode === 'blend') {
             pushMaskHistory();
@@ -718,10 +741,9 @@
         const expectedIndex = index;
         img.onload = () => {
             if (baseIndex !== expectedIndex) return;
-            // Recreate canvas to clear all state including clip regions
             const oldWidth = baseCanvas.width;
             const oldHeight = baseCanvas.height;
-            baseCanvas.width = oldWidth; // This resets all canvas state
+            baseCanvas.width = oldWidth;
             baseCanvas.height = oldHeight;
             const bCtx = baseCanvas.getContext('2d', { willReadFrequently: true });
             bCtx.drawImage(img, 0, 0);
@@ -743,9 +765,6 @@
         img.src = dataUrl;
     }
 
-    /**
-     * FILE HANDLING
-     */
     function handleBaseSelect(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -762,14 +781,13 @@
                 canvas.width = img.width;
                 canvas.height = img.height;
                 resetView();
-                
+
                 maskHistory.length = 0; maskIndex = -1;
                 baseHistory.length = 0; baseIndex = -1;
-                pushHistory(); 
+                pushHistory();
 
                 emptyState.style.display = 'none';
                 showToast('Base loaded');
-                buildBlurLayers();
                 render();
             };
             img.src = event.target.result;
@@ -813,7 +831,7 @@
         const oW = state.overlayImg.width; const oH = state.overlayImg.height;
         const baseRatio = bW / bH;
         const overlayRatio = oW / oH;
-        
+
         let drawW, drawH, drawX, drawY;
         if (Math.abs(baseRatio - overlayRatio) < 0.001) {
             drawW = bW; drawH = bH; drawX = 0; drawY = 0;
@@ -827,18 +845,14 @@
         mCtx.fillStyle = '#FFFFFF';
         mCtx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Initialize mask history so the very first stroke can be undone
         maskHistory.length = 0;
         maskIndex = -1;
         pushMaskHistory();
     }
 
-    /**
-     * MODE SWITCHING
-     */
     function switchMode(newMode) {
         state.mode = newMode;
-        
+
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
         const navItems = document.querySelectorAll('.nav-item');
         if(newMode === 'blend') navItems[0].classList.add('active');
@@ -858,8 +872,6 @@
         pageTitle.textContent = newMode.charAt(0).toUpperCase() + newMode.slice(1);
 
         const stack = (newMode === 'blend') ? maskHistory : baseHistory;
-        const idx = (newMode === 'blend') ? maskIndex : baseIndex;
-        
         if (stack.length === 0 && baseCanvas) {
             pushHistory();
         }
@@ -867,16 +879,12 @@
         render();
     }
 
-    /**
-     * RENDERING & CURSORS
-     */
     function render(options = {}) {
         if (!baseCanvas) return;
         const showOverlays = options.showOverlays !== false && !state.suppressOverlays;
 
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         ctx.drawImage(baseCanvas, 0, 0);
 
         if (state.mode === 'blend' && overlayCanvas) {
@@ -890,7 +898,6 @@
             ctx.drawImage(tempCanvas, 0, 0);
         }
 
-        // Draw Cursors & Previews
         if (showOverlays) {
             if (state.cursor.x !== null) drawCursorOverlay();
             if (state.showCenterPreview) drawCenterPreview();
@@ -899,7 +906,7 @@
 
     function drawCenterPreview() {
         let size = 0;
-        let color = 'lime'; 
+        let color = 'lime';
         let shape = 'circle';
 
         if (state.mode === 'blend') {
@@ -913,7 +920,7 @@
 
         ctx.save();
         ctx.strokeStyle = color;
-        ctx.lineWidth = 4; 
+        ctx.lineWidth = 4;
         ctx.setLineDash([10, 10]);
 
         ctx.beginPath();
@@ -931,7 +938,7 @@
 
     function drawCursorOverlay() {
         ctx.save();
-        
+
         let size = 0;
         let color = 'white';
         let shape = 'circle';
@@ -972,9 +979,6 @@
         ctx.restore();
     }
 
-    /**
-     * INTERACTION
-     */
     let retouchStartPos = null;
 
     function startStroke(e) {
@@ -987,24 +991,24 @@
         if (state.mode === 'blend') {
             if (!overlayCanvas) return;
             paintOnMask(x, y);
-            state.hasInteracted = true; // Count down-up as a stroke
+            state.hasInteracted = true;
         } else if (state.mode === 'blur') {
             applyBlur(x, y);
-            state.hasInteracted = true; // Count down-up as a stroke
+            state.hasInteracted = true;
         } else if (state.mode === 'retouch') {
             if (state.retouchMode === 'pick') {
                 state.cloneSource = {x, y};
                 document.getElementById('retouchStatus').textContent = "Source Set. Tap 'Paint' to apply.";
                 document.getElementById('btnPaintSource').classList.add('active');
                 document.getElementById('btnPickSource').classList.remove('active');
-                state.isDrawing = false; // Picking source shouldn't create history
+                state.isDrawing = false;
                 state.hasInteracted = false;
                 render();
             } else {
                 if (state.cloneSource.x === null) { showToast('Pick a source first!'); state.isDrawing = false; return; }
-                retouchStartPos = {x, y}; 
+                retouchStartPos = {x, y};
                 applyRetouch(x, y);
-                state.hasInteracted = true; // Count down-up as a stroke
+                state.hasInteracted = true;
             }
         }
     }
@@ -1029,11 +1033,6 @@
         retouchStartPos = null;
     }
 
-    /**
-     * FEATURES
-     */
-
-    // 1. BLEND
     function setBrushMode(mode) {
         state.brushMode = mode;
         document.getElementById('btnPaint').className = mode === 'paint' ? 'tool-btn active' : 'tool-btn';
@@ -1050,7 +1049,7 @@
     function drawBrushLogic(ctx, x, y, r, softness, mode) {
         ctx.save();
         ctx.beginPath();
-        
+
         const hardness =1.0 - softness;
         const innerR = r * hardness;
 
@@ -1067,238 +1066,317 @@
             grad.addColorStop(1, 'rgba(255,255,255,0)');
             ctx.fillStyle = grad;
         }
-        
+
         ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
     }
 
-    // 2. BLUR (Soft Edge Vignette Algorithm)
     function setBrushShape(shape) {
         state.blurShape = shape;
         document.getElementById('btnShapeCircle').className = shape === 'circle' ? 'tool-btn active' : 'tool-btn';
         document.getElementById('btnShapeRect').className = shape === 'rect' ? 'tool-btn active' : 'tool-btn';
     }
 
-    function buildGaussianKernel(radius, sigma) {
-        const size = radius * 2 + 1;
-        const kernel = new Float32Array(size);
+    const blurEngine = createBlurEngine();
+
+    function createBlurEngine() {
+        const engine = {
+            ready: false,
+            canvas: document.createElement('canvas'),
+            gl: null,
+            program: null,
+            positionBuffer: null,
+            texA: null,
+            texB: null,
+            fboA: null,
+            fboB: null,
+            size: 0,
+            source2D: document.createElement('canvas'),
+            sourceCtx: null,
+            maskCanvas: document.createElement('canvas'),
+            maskCtx: null,
+            composeCanvas: document.createElement('canvas'),
+            composeCtx: null,
+            uniformLocations: null,
+            attribLocations: null
+        };
+
+        engine.sourceCtx = engine.source2D.getContext('2d', { willReadFrequently: true });
+        engine.maskCtx = engine.maskCanvas.getContext('2d');
+        engine.composeCtx = engine.composeCanvas.getContext('2d');
+
+        const gl = engine.canvas.getContext('webgl', { premultipliedAlpha: false, preserveDrawingBuffer: true });
+        if (!gl) {
+            showToast('WebGL not supported');
+            return engine;
+        }
+        engine.gl = gl;
+
+        const vertexSrc = `
+            attribute vec2 a_position;
+            attribute vec2 a_texCoord;
+            varying vec2 v_texCoord;
+            void main() {
+                gl_Position = vec4(a_position, 0.0, 1.0);
+                v_texCoord = a_texCoord;
+            }
+        `;
+        const fragmentSrc = `
+            precision mediump float;
+            uniform sampler2D u_image;
+            uniform vec2 u_texelSize;
+            uniform vec2 u_direction;
+            uniform float u_radius;
+            uniform float u_kernel[9];
+            varying vec2 v_texCoord;
+            void main() {
+                vec2 step = u_direction * u_texelSize * u_radius;
+                vec4 color = texture2D(u_image, v_texCoord) * u_kernel[4];
+                color += texture2D(u_image, v_texCoord + step * 1.0) * u_kernel[5];
+                color += texture2D(u_image, v_texCoord - step * 1.0) * u_kernel[3];
+                color += texture2D(u_image, v_texCoord + step * 2.0) * u_kernel[6];
+                color += texture2D(u_image, v_texCoord - step * 2.0) * u_kernel[2];
+                color += texture2D(u_image, v_texCoord + step * 3.0) * u_kernel[7];
+                color += texture2D(u_image, v_texCoord - step * 3.0) * u_kernel[1];
+                color += texture2D(u_image, v_texCoord + step * 4.0) * u_kernel[8];
+                color += texture2D(u_image, v_texCoord - step * 4.0) * u_kernel[0];
+                gl_FragColor = color;
+            }
+        `;
+
+        const program = createProgram(gl, vertexSrc, fragmentSrc);
+        if (!program) {
+            showToast('WebGL shader error');
+            return engine;
+        }
+        engine.program = program;
+
+        engine.attribLocations = {
+            position: gl.getAttribLocation(program, 'a_position'),
+            texCoord: gl.getAttribLocation(program, 'a_texCoord')
+        };
+        engine.uniformLocations = {
+            image: gl.getUniformLocation(program, 'u_image'),
+            texelSize: gl.getUniformLocation(program, 'u_texelSize'),
+            direction: gl.getUniformLocation(program, 'u_direction'),
+            radius: gl.getUniformLocation(program, 'u_radius'),
+            kernel: gl.getUniformLocation(program, 'u_kernel[0]')
+        };
+
+        const quad = new Float32Array([
+            -1, -1,  0, 0,
+             1, -1,  1, 0,
+            -1,  1,  0, 1,
+            -1,  1,  0, 1,
+             1, -1,  1, 0,
+             1,  1,  1, 1
+        ]);
+
+        engine.positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, engine.positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+
+        engine.ready = true;
+        return engine;
+    }
+
+    function createProgram(gl, vertexSrc, fragmentSrc) {
+        const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+        gl.shaderSource(vertexShader, vertexSrc);
+        gl.compileShader(vertexShader);
+        if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+            return null;
+        }
+
+        const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+        gl.shaderSource(fragmentShader, fragmentSrc);
+        gl.compileShader(fragmentShader);
+        if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+            return null;
+        }
+
+        const program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            return null;
+        }
+        return program;
+    }
+
+    function ensureBlurBuffers(size) {
+        const gl = blurEngine.gl;
+        if (!blurEngine.ready || !gl) return false;
+        const s = Math.max(2, Math.round(size));
+        if (blurEngine.size === s) return true;
+
+        blurEngine.size = s;
+        blurEngine.canvas.width = s;
+        blurEngine.canvas.height = s;
+        blurEngine.source2D.width = s;
+        blurEngine.source2D.height = s;
+        blurEngine.maskCanvas.width = s;
+        blurEngine.maskCanvas.height = s;
+        blurEngine.composeCanvas.width = s;
+        blurEngine.composeCanvas.height = s;
+
+        const texA = gl.createTexture();
+        const texB = gl.createTexture();
+        setupTexture(gl, texA, s, s);
+        setupTexture(gl, texB, s, s);
+
+        const fboA = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fboA);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texA, 0);
+
+        const fboB = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fboB);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texB, 0);
+
+        blurEngine.texA = texA;
+        blurEngine.texB = texB;
+        blurEngine.fboA = fboA;
+        blurEngine.fboB = fboB;
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        return true;
+    }
+
+    function setupTexture(gl, texture, width, height) {
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    }
+
+    function buildKernel(sigma) {
+        const radius = 4;
+        const kernel = new Float32Array(radius * 2 + 1);
         const sigma2 = sigma * sigma;
         let sum = 0;
         for (let i = -radius; i <= radius; i++) {
-            const value = Math.exp(-(i * i) / (2 * sigma2));
-            kernel[i + radius] = value;
-            sum += value;
+            const v = Math.exp(-(i * i) / (2 * sigma2));
+            kernel[i + radius] = v;
+            sum += v;
         }
-        for (let i = 0; i < size; i++) {
+        for (let i = 0; i < kernel.length; i++) {
             kernel[i] /= sum;
         }
         return kernel;
     }
 
-    function drawFallbackBlur(sourceCanvas, targetCtx, strength) {
-        const w = sourceCanvas.width;
-        const h = sourceCanvas.height;
-        const sigma = Math.max(0.6, strength * 0.6);
-        const radius = Math.min(80, Math.max(2, Math.ceil(sigma * 2.5)));
+    function drawBlurPass(inputTex, outputFbo, direction, radius, kernel) {
+        const gl = blurEngine.gl;
+        const { program, positionBuffer, attribLocations, uniformLocations } = blurEngine;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, outputFbo);
+        gl.viewport(0, 0, blurEngine.size, blurEngine.size);
+        gl.useProgram(program);
 
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.enableVertexAttribArray(attribLocations.position);
+        gl.vertexAttribPointer(attribLocations.position, 2, gl.FLOAT, false, 16, 0);
+        gl.enableVertexAttribArray(attribLocations.texCoord);
+        gl.vertexAttribPointer(attribLocations.texCoord, 2, gl.FLOAT, false, 16, 8);
 
-        const srcCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
-        const srcData = srcCtx.getImageData(0, 0, w, h);
-        const src = srcData.data;
-        const kernel = buildGaussianKernel(radius, sigma);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, inputTex);
+        gl.uniform1i(uniformLocations.image, 0);
+        gl.uniform2f(uniformLocations.texelSize, 1 / blurEngine.size, 1 / blurEngine.size);
+        gl.uniform2f(uniformLocations.direction, direction[0], direction[1]);
+        gl.uniform1f(uniformLocations.radius, radius);
+        gl.uniform1fv(uniformLocations.kernel, kernel);
 
-        const tmp = new Float32Array(src.length);
-        const dst = new Uint8ClampedArray(src.length);
-
-        const clampX = (x) => (x < 0 ? 0 : x >= w ? w - 1 : x);
-        const clampY = (y) => (y < 0 ? 0 : y >= h ? h - 1 : y);
-
-        // Horizontal pass
-        for (let y = 0; y < h; y++) {
-            const row = y * w;
-            for (let x = 0; x < w; x++) {
-                let r = 0, g = 0, b = 0, a = 0;
-                for (let k = -radius; k <= radius; k++) {
-                    const ix = clampX(x + k);
-                    const idx = (row + ix) * 4;
-                    const wgt = kernel[k + radius];
-                    r += src[idx] * wgt;
-                    g += src[idx + 1] * wgt;
-                    b += src[idx + 2] * wgt;
-                    a += src[idx + 3] * wgt;
-                }
-                const outIdx = (row + x) * 4;
-                tmp[outIdx] = r;
-                tmp[outIdx + 1] = g;
-                tmp[outIdx + 2] = b;
-                tmp[outIdx + 3] = a;
-            }
-        }
-
-        // Vertical pass
-        for (let y = 0; y < h; y++) {
-            for (let x = 0; x < w; x++) {
-                let r = 0, g = 0, b = 0, a = 0;
-                for (let k = -radius; k <= radius; k++) {
-                    const iy = clampY(y + k);
-                    const idx = (iy * w + x) * 4;
-                    const wgt = kernel[k + radius];
-                    r += tmp[idx] * wgt;
-                    g += tmp[idx + 1] * wgt;
-                    b += tmp[idx + 2] * wgt;
-                    a += tmp[idx + 3] * wgt;
-                }
-                const outIdx = (y * w + x) * 4;
-                dst[outIdx] = r;
-                dst[outIdx + 1] = g;
-                dst[outIdx + 2] = b;
-                dst[outIdx + 3] = a;
-            }
-        }
-
-        const outData = new ImageData(dst, w, h);
-        targetCtx.putImageData(outData, 0, 0);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
-    function getBlurLayerScale() {
-        const maxDim = Math.max(canvas.width, canvas.height);
-        if (maxDim <= BLUR_LAYER_TARGET_MAX) return 1;
-        if (maxDim <= BLUR_LAYER_MEDIUM_MAX) return BLUR_LAYER_SCALE_MEDIUM;
-        return BLUR_LAYER_SCALE_LOW;
-    }
+    const blurBuffers = {
+        size: 0,
+        temp: document.createElement('canvas'),
+        mask: document.createElement('canvas'),
+        tempCtx: null,
+        maskCtx: null
+    };
+    blurBuffers.tempCtx = blurBuffers.temp.getContext('2d');
+    blurBuffers.maskCtx = blurBuffers.mask.getContext('2d');
 
-    function buildBlurLayers() {
-
-        if (!baseCanvas) return;
-        blurLayersReady = false;
-        blurLayers = [];
-        let idx = 0;
-        showToast('Building blur layers...');
-
-        blurLayerScale = getBlurLayerScale();
-        const layerWidth = Math.max(1, Math.round(canvas.width * blurLayerScale));
-        const layerHeight = Math.max(1, Math.round(canvas.height * blurLayerScale));
-        const scaledBase = document.createElement('canvas');
-        scaledBase.width = layerWidth;
-        scaledBase.height = layerHeight;
-        const scaledCtx = scaledBase.getContext('2d', { willReadFrequently: true });
-        scaledCtx.drawImage(baseCanvas, 0, 0, layerWidth, layerHeight);
-
-        const buildNext = () => {
-            if (!baseCanvas) return;
-            if (idx >= BLUR_STRENGTH_STEPS.length) {
-                blurLayersReady = true;
-                showToast('Blur ready');
-                return;
-            }
-
-            const strength = BLUR_STRENGTH_STEPS[idx];
-            const layerCanvas = document.createElement('canvas');
-            layerCanvas.width = layerWidth;
-            layerCanvas.height = layerHeight;
-            const lCtx = layerCanvas.getContext('2d');
-            const effectiveStrength = strength * blurLayerScale;
-
-            const canUseFilter = !isIOS && typeof lCtx.filter !== 'undefined';
-            if (canUseFilter) {
-                lCtx.filter = `blur(${effectiveStrength}px)`;
-                lCtx.drawImage(scaledBase, 0, 0);
-                lCtx.filter = 'none';
-            } else {
-                drawFallbackBlur(scaledBase, lCtx, effectiveStrength);
-            }
-
-            blurLayers.push({ strength, canvas: layerCanvas, scale: blurLayerScale });
-            idx++;
-            setTimeout(buildNext, 0);
-        };
-
-
-        buildNext();
-    }
-
-    function getBlurLayerByStrength(strength) {
-        if (!blurLayers.length) return null;
-        const target = Math.min(BLUR_STRENGTH_STEPS[BLUR_STRENGTH_STEPS.length - 1], strength * BLUR_STRENGTH_SCALE);
-        let best = blurLayers[0];
-        let bestDiff = Math.abs(best.strength - target);
-        for (let i = 1; i < blurLayers.length; i++) {
-            const layer = blurLayers[i];
-            const diff = Math.abs(layer.strength - target);
-            if (diff < bestDiff) {
-                best = layer;
-                bestDiff = diff;
-            }
-        }
-        return best;
+    function ensureBlur2dBuffers(size) {
+        const s = Math.max(2, Math.round(size));
+        if (blurBuffers.size === s) return;
+        blurBuffers.size = s;
+        blurBuffers.temp.width = s;
+        blurBuffers.temp.height = s;
+        blurBuffers.mask.width = s;
+        blurBuffers.mask.height = s;
     }
 
     function applyBlur(x, y) {
-        if (!blurLayersReady) return;
-        const layer = getBlurLayerByStrength(state.blurStrength);
-        if (!layer) return;
+        if (!baseCanvas) return;
 
         const bCtx = baseCanvas.getContext('2d');
-        const size = (state.blurSize / 100) * canvas.width;
+        const size = Math.max(2, (state.blurSize / 100) * canvas.width);
+        const half = size / 2;
 
-        // 1. Create a temp canvas containing the pre-blurred layer
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = canvas.height;
-        const tCtx = tempCanvas.getContext('2d');
-        tCtx.drawImage(layer.canvas, 0, 0, canvas.width, canvas.height);
+        ensureBlur2dBuffers(size);
 
+        const srcX = Math.max(0, Math.min(baseCanvas.width - size, x - half));
+        const srcY = Math.max(0, Math.min(baseCanvas.height - size, y - half));
 
-        // 2. Create a Soft Mask (Vignette) based on Softness slider
-        const maskCanvas2 = document.createElement('canvas');
-        maskCanvas2.width = canvas.width;
-        maskCanvas2.height = canvas.height;
-        const mCtx2 = maskCanvas2.getContext('2d');
+        const blurPx = Math.max(1, state.blurStrength * 0.9);
+        const tCtx = blurBuffers.tempCtx;
 
-        if (state.blurSoftness > 0) {
-            const r = size / 2;
-            const hardness = 1.0 - state.blurSoftness;
-            const r0 = r * hardness;
-            const cx = x;
-            const cy = y;
+        tCtx.clearRect(0, 0, blurBuffers.size, blurBuffers.size);
+        tCtx.filter = `blur(${blurPx}px)`;
+        tCtx.drawImage(baseCanvas, srcX, srcY, size, size, 0, 0, blurBuffers.size, blurBuffers.size);
+        tCtx.filter = 'none';
 
-            mCtx2.beginPath();
-            if (state.blurShape === 'circle') {
-                mCtx2.arc(cx, cy, r, 0, Math.PI*2);
-            } else {
-                const rLarge = Math.max(size, size * 1.5);
-                mCtx2.arc(cx, cy, rLarge, 0, Math.PI*2);
-            }
-
-            const grad = mCtx2.createRadialGradient(cx, cy, r0, cx, cy, r);
-            grad.addColorStop(0, 'rgba(255,255,255,1)');
-            grad.addColorStop(1, 'rgba(255,255,255,0)');
-            mCtx2.fillStyle = grad;
-            mCtx2.fill();
-        } else {
-            mCtx2.beginPath();
-            if (state.blurShape === 'circle') {
-                mCtx2.arc(x, y, size/2, 0, Math.PI*2);
-            } else {
-                mCtx2.rect(x - size/2, y - size/2, size, size);
-            }
-            mCtx2.fillStyle = '#FFFFFF';
-            mCtx2.fill();
-        }
-
-        // 3. Apply Mask to the Pre-blurred Image
+        applyBlurMask(blurBuffers.maskCtx, blurBuffers.size, state.blurSoftness, state.blurShape);
         tCtx.globalCompositeOperation = 'destination-in';
-        tCtx.drawImage(maskCanvas2, 0, 0);
+        tCtx.drawImage(blurBuffers.mask, 0, 0);
+        tCtx.globalCompositeOperation = 'source-over';
 
-        // 4. Draw result onto Base Canvas
         bCtx.globalCompositeOperation = 'source-over';
-        bCtx.drawImage(tempCanvas, 0, 0);
+        bCtx.drawImage(blurBuffers.temp, srcX, srcY, size, size);
 
         render();
     }
 
-    // 3. RETOUCH
+    function applyBlurMask(maskCtx, size, softness, shape) {
+        maskCtx.clearRect(0, 0, size, size);
+        if (softness <= 0) {
+            maskCtx.fillStyle = '#fff';
+            if (shape === 'circle') {
+                maskCtx.beginPath();
+                maskCtx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+                maskCtx.fill();
+            } else {
+                maskCtx.fillRect(0, 0, size, size);
+            }
+            return;
+        }
+
+        if (shape === 'circle') {
+            const r = size / 2;
+            const r0 = r * (1 - softness);
+            const grad = maskCtx.createRadialGradient(r, r, r0, r, r, r);
+            grad.addColorStop(0, 'rgba(255,255,255,1)');
+            grad.addColorStop(1, 'rgba(255,255,255,0)');
+            maskCtx.fillStyle = grad;
+            maskCtx.beginPath();
+            maskCtx.arc(r, r, r, 0, Math.PI * 2);
+            maskCtx.fill();
+        } else {
+            const softPx = Math.max(1, size * 0.5 * softness);
+            maskCtx.filter = `blur(${softPx}px)`;
+            maskCtx.fillStyle = '#fff';
+            maskCtx.fillRect(softPx, softPx, size - softPx * 2, size - softPx * 2);
+            maskCtx.filter = 'none';
+        }
+    }
+
     function setRetouchMode(mode) {
         state.retouchMode = mode;
         if (mode === 'pick') {
@@ -1312,48 +1390,77 @@
         }
     }
 
+    const retouchBuffers = {
+        size: 0,
+        temp: document.createElement('canvas'),
+        mask: document.createElement('canvas'),
+        tempCtx: null,
+        maskCtx: null
+    };
+    retouchBuffers.tempCtx = retouchBuffers.temp.getContext('2d');
+    retouchBuffers.maskCtx = retouchBuffers.mask.getContext('2d');
+
+    function ensureRetouchBuffers(size) {
+        const s = Math.max(2, Math.round(size));
+        if (retouchBuffers.size === s) return;
+        retouchBuffers.size = s;
+        retouchBuffers.temp.width = s;
+        retouchBuffers.temp.height = s;
+        retouchBuffers.mask.width = s;
+        retouchBuffers.mask.height = s;
+    }
+
     function applyRetouch(currX, currY) {
         const bCtx = baseCanvas.getContext('2d');
         const size = (state.retouchSize / 100) * canvas.width;
-        
+        const half = size / 2;
+
+        ensureRetouchBuffers(size);
+
         const offX = currX - retouchStartPos.x;
         const offY = currY - retouchStartPos.y;
-        
+
         const srcX = state.cloneSource.x + offX;
         const srcY = state.cloneSource.y + offY;
-        
-        const temp = document.createElement('canvas');
-        temp.width = size;
-        temp.height = size;
-        const tCtx = temp.getContext('2d');
-        
-        tCtx.drawImage(baseCanvas, srcX - size/2, srcY - size/2, size, size, 0, 0, size, size);
-        
-        const hardness = 1 - state.retouchSoftness;
-        const r = size/2;
-        const r0 = r * hardness;
 
-        tCtx.globalCompositeOperation = 'destination-in';
-        const grad = tCtx.createRadialGradient(size/2, size/2, r0, size/2, size/2, r);
-        grad.addColorStop(0, 'rgba(0,0,0,1)'); 
-        grad.addColorStop(1, 'rgba(0,0,0,0)');
-        tCtx.fillStyle = grad;
-        tCtx.fillRect(0, 0, size, size);
-        
+        const tempCtx = retouchBuffers.tempCtx;
+        tempCtx.clearRect(0, 0, retouchBuffers.size, retouchBuffers.size);
+        tempCtx.drawImage(baseCanvas, srcX - half, srcY - half, size, size, 0, 0, retouchBuffers.size, retouchBuffers.size);
+
+        const maskCtx = retouchBuffers.maskCtx;
+        maskCtx.clearRect(0, 0, retouchBuffers.size, retouchBuffers.size);
+        if (state.retouchSoftness <= 0) {
+            maskCtx.fillStyle = '#000';
+            maskCtx.fillRect(0, 0, retouchBuffers.size, retouchBuffers.size);
+        } else {
+            const r = retouchBuffers.size / 2;
+            const r0 = r * (1 - state.retouchSoftness);
+            const grad = maskCtx.createRadialGradient(r, r, r0, r, r, r);
+            grad.addColorStop(0, 'rgba(0,0,0,1)');
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            maskCtx.fillStyle = grad;
+            maskCtx.beginPath();
+            maskCtx.arc(r, r, r, 0, Math.PI * 2);
+            maskCtx.fill();
+        }
+
+        tempCtx.globalCompositeOperation = 'destination-in';
+        tempCtx.drawImage(retouchBuffers.mask, 0, 0);
+        tempCtx.globalCompositeOperation = 'source-over';
+
         bCtx.globalCompositeOperation = 'source-over';
-        bCtx.drawImage(temp, currX - size/2, currY - size/2);
-        
+        bCtx.drawImage(retouchBuffers.temp, currX - half, currY - half, size, size);
+
         render();
     }
 
-    // Utilities
     function invertMask() {
         if (!maskCanvas) return;
         pushHistory();
         const mCtx = maskCanvas.getContext('2d');
         const imgData = mCtx.getImageData(0, 0, canvas.width, canvas.height);
         for (let i = 0; i < imgData.data.length; i += 4) {
-            imgData.data[i+3] = 255 - imgData.data[i+3]; 
+            imgData.data[i+3] = 255 - imgData.data[i+3];
         }
         mCtx.putImageData(imgData, 0, 0);
         render();
@@ -1406,23 +1513,6 @@
         showToast('Reset');
     }
 
-    function resetProject() {
-
-        if(confirm("Reset everything?")) {
-            state.baseImg = null;
-            state.overlayImg = null;
-            baseCanvas = null; maskCanvas = null; overlayCanvas = null;
-            maskHistory.length = 0; maskIndex = -1;
-            baseHistory.length = 0; baseIndex = -1;
-            blurLayers = [];
-            blurLayersReady = false;
-            ctx.clearRect(0,0, canvas.width, canvas.height);
-            emptyState.style.display = 'block';
-            document.getElementById('baseInput').value = '';
-            document.getElementById('overlayInput').value = '';
-        }
-    }
-
     function saveImage() {
         if (!baseCanvas) {
             showToast('Nothing to save!');
@@ -1471,4 +1561,3 @@
 </script>
 </body>
 </html>
-

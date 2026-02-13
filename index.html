@@ -39,7 +39,10 @@
 
         /* Header */
         header {
-            display: flex; align-items: center; justify-content: space-between;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
             padding: calc(6px + env(safe-area-inset-top)) 8px 6px;
             min-height: 50px;
             background-color: var(--surface-color);
@@ -47,9 +50,18 @@
             z-index: 10;
         }
 
+        .header-left,
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+
         h1 { font-size: 18px; margin: 0; font-weight: 600; flex: 1; text-align: center; }
-        .header-btn { background: none; border: none; color: var(--primary-color); font-size: 14px; font-weight: 500; cursor: pointer; padding: 0 10px; }
-        .header-icon-btn { font-size: 18px; color: var(--text-color); background: none; border: none; padding: 8px; }
+        .header-icon-btn { font-size: 14px; color: var(--text-color); background: none; border: none; padding: 8px; }
+        .header-action { padding: 6px 10px; border-radius: 8px; font-size: 13px; }
+
 
         /* Main Area */
         main {
@@ -88,13 +100,18 @@
         }
         .nav-item {
             flex: 1;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             color: var(--secondary-text);
-            font-size: 10px; font-weight: 500;
+            font-size: 12px; font-weight: 600;
             border: none; background: none;
         }
         .nav-item.active { color: var(--primary-color); }
-        .nav-icon { font-size: 20px; margin-bottom: 2px; }
+        .nav-separator {
+            width: 1px;
+            background: var(--border-color);
+            margin: 10px 0;
+        }
+
 
         /* Tool UI */
         .tool-row { display: flex; gap: 10px; align-items: center; }
@@ -109,6 +126,12 @@
             padding: 8px 12px; border-radius: 8px; font-size: 13px;
         }
         .action-btn.active { background-color: var(--primary-color); }
+        .action-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            filter: grayscale(0.2);
+        }
+
 
         /* Sliders */
         .slider-container {
@@ -119,10 +142,11 @@
             max-width: 80vw;
             margin: 0 auto;
             min-width: 0;
-            min-height: 32px;
+            min-height: 16px;
             align-self: center;
             background: transparent;
         }
+
         .slider-label {
             font-size: 12px;
             color: var(--secondary-text);
@@ -136,7 +160,7 @@
             width: 100%;
             max-width: 100%;
             min-width: 0;
-            height: 28px;
+            height: 14px;
             margin: 0;
             padding: 0;
             background: transparent;
@@ -149,19 +173,19 @@
         }
 
         input[type="range"]::-webkit-slider-runnable-track {
-            height: 4px;
+            height: 2px;
             background: #3a3a3c;
             background-color: #3a3a3c;
-            border-radius: 2px;
+            border-radius: 1px;
             border: none;
             box-shadow: none;
         }
 
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
-            margin-top: -8px;
+            width: 12px;
+            height: 12px;
+            margin-top: -5px;
             border-radius: 50%;
             background: var(--primary-color);
             cursor: pointer;
@@ -170,15 +194,15 @@
         }
 
         input[type="range"]::-moz-range-track {
-            height: 4px;
+            height: 2px;
             background: #3a3a3c;
-            border-radius: 2px;
+            border-radius: 1px;
             border: none;
         }
 
         input[type="range"]::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
             background: var(--primary-color);
             border: 2px solid #fff;
@@ -186,11 +210,12 @@
         }
 
         input[type="range"]::-ms-track {
-            height: 4px;
+            height: 2px;
             background: transparent;
             border-color: transparent;
             color: transparent;
         }
+
 
         input[type="range"]::-ms-fill-lower,
         input[type="range"]::-ms-fill-upper {
@@ -229,6 +254,20 @@
             letter-spacing: 0.2px;
         }
 
+        #resetViewBadge {
+            position: fixed;
+            top: calc(58px + env(safe-area-inset-top));
+            right: 8px;
+            font-size: 11px;
+            color: var(--primary-color);
+            background: rgba(44, 44, 46, 0.9);
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            z-index: 110;
+        }
+
+
         input[type="file"] { display: none; }
         .hidden { display: none !important; }
     </style>
@@ -236,14 +275,22 @@
 <body>
 
 <header>
-    <div style="display:flex; gap:5px;">
+    <div class="header-left">
         <button class="header-icon-btn" onclick="undo()">↩️</button>
         <button class="header-icon-btn" onclick="redo()">↪️</button>
+        <button class="header-icon-btn" onclick="resetEdits()">Reset</button>
     </div>
-    <h1 id="pageTitle">LayerLab</h1>
-    <button class="header-btn" onclick="saveImage()">Save</button>
+    <h1 id="pageTitle">💥 Blend</h1>
+
+    <div class="header-right">
+        <button class="action-btn header-action" onclick="document.getElementById('baseInput').click()">Import Base</button>
+        <button class="action-btn header-action" id="btnOverlay" onclick="document.getElementById('overlayInput').click()">Import Overlay</button>
+        <button class="action-btn header-action" onclick="saveImage()">Save</button>
+    </div>
 </header>
-<div id="versionBadge">v1.1.0</div>
+<div id="versionBadge">v1.2.0</div>
+<button id="resetViewBadge" onclick="resetView()">Reset View</button>
+
 
 <main id="canvasViewport">
     <div id="empty-state">
@@ -255,22 +302,15 @@
 
 <!-- Controls Area -->
 <div id="controls">
-    <!-- Common Import -->
-    <div class="tool-row" id="import-row">
-        <button class="action-btn" style="flex:1" onclick="document.getElementById('baseInput').click()">Import Base</button>
-        <button class="action-btn" style="flex:1" id="btnOverlay" onclick="document.getElementById('overlayInput').click()">Import Overlay</button>
-    </div>
 
-    <div class="tool-row" id="view-row">
-        <button class="action-btn" style="flex:1" onclick="resetView()">Reset View</button>
-        <button class="action-btn" style="flex:1" onclick="resetEdits()">Reset</button>
-    </div>
 
     <!-- MODE: BLEND -->
     <div id="panel-blend" class="panel active">
         <div class="tool-group">
             <button class="tool-btn active" id="btnPaint" onclick="setBrushMode('paint')">Paint (Show)</button>
             <button class="tool-btn" id="btnErase" onclick="setBrushMode('erase')">Erase (Hide)</button>
+            <button class="tool-btn" onclick="invertMask()">Invert Alpha</button>
+            <button class="tool-btn" onclick="clearMask()">Clear Mask</button>
         </div>
         <div class="slider-container">
             <span class="slider-label">Size</span>
@@ -281,10 +321,6 @@
             <span class="slider-label">Softness</span>
             <input type="range" id="softRange" min="0" max="100" value="70">
             <span class="slider-label" id="softVal">70%</span>
-        </div>
-        <div class="tool-row">
-            <button class="action-btn" onclick="invertMask()">Invert Alpha</button>
-            <button class="action-btn danger" onclick="clearMask()">Clear Mask</button>
         </div>
     </div>
 
@@ -313,10 +349,11 @@
 
     <!-- MODE: RETOUCH -->
     <div id="panel-retouch" class="panel">
-        <div class="tool-row">
-            <button class="action-btn" id="btnPickSource" onclick="setRetouchMode('pick')">Pick Source</button>
-            <button class="action-btn" id="btnPaintSource" onclick="setRetouchMode('paint')">Paint</button>
+        <div class="tool-group">
+            <button class="tool-btn active" id="btnPickSource" onclick="setRetouchMode('pick')">Pick Source</button>
+            <button class="tool-btn" id="btnPaintSource" onclick="setRetouchMode('paint')">Paint</button>
         </div>
+
         <div style="text-align:center; font-size:12px; color:var(--secondary-text);" id="retouchStatus">
             Tap "Pick Source" then tap image
         </div>
@@ -335,19 +372,13 @@
 
 <!-- Navigation Bar -->
 <nav id="navbar">
-    <button class="nav-item active" onclick="switchMode('blend')">
-        <span class="nav-icon">✨</span>
-        Blend
-    </button>
-    <button class="nav-item" onclick="switchMode('blur')">
-        <span class="nav-icon">💧</span>
-        Blur
-    </button>
-    <button class="nav-item" onclick="switchMode('retouch')">
-        <span class="nav-icon">🧹</span>
-        Retouch
-    </button>
+    <button class="nav-item active" onclick="switchMode('blend')">Blend</button>
+    <div class="nav-separator"></div>
+    <button class="nav-item" onclick="switchMode('blur')">Blur</button>
+    <div class="nav-separator"></div>
+    <button class="nav-item" onclick="switchMode('retouch')">Retouch</button>
 </nav>
+
 
 <input type="file" id="baseInput" accept="image/*">
 <input type="file" id="overlayInput" accept="image/*">
@@ -888,12 +919,15 @@
 
         const btnOverlay = document.getElementById('btnOverlay');
         if (newMode === 'blend') {
-            btnOverlay.classList.remove('hidden');
+            btnOverlay.disabled = false;
         } else {
-            btnOverlay.classList.add('hidden');
+            btnOverlay.disabled = true;
         }
 
-        pageTitle.textContent = newMode.charAt(0).toUpperCase() + newMode.slice(1);
+        const modeEmoji = newMode === 'blend' ? '🔀' : newMode === 'blur' ? '💧' : '🩹';
+        pageTitle.textContent = modeEmoji + ' ' + newMode.charAt(0).toUpperCase() + newMode.slice(1);
+
+
 
         const stack = (newMode === 'blend') ? maskHistory : baseHistory;
         if (stack.length === 0 && baseCanvas) {
